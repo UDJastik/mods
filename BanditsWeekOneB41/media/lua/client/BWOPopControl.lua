@@ -210,8 +210,8 @@ BWOPopControl.StreetsSpawn = function(cnt)
         if not anchor then break end
         local cell = anchor:getCell()
         local px, py = anchor:getX(), anchor:getY()
-        local x = 10 + ZombRand(25)
-        local y = 10 + ZombRand(25)
+        local x = 10 + ZombRand(10)
+        local y = 10 + ZombRand(10)
         
         if ZombRand(2) == 1 then x = -x end
         if ZombRand(2) == 1 then y = -y end
@@ -309,7 +309,7 @@ BWOPopControl.StreetsDespawn = function(cnt,always)
         local zy = zombie.y
         local dist = minDistanceToAnyPlayer(zx, zy)
         local i = 0
-        if dist > 50 then
+        if dist > 35 then
             local zombieObj = BanditZombie.GetInstanceById(zombie.id)
             zombieObj:removeFromSquare()
             zombieObj:removeFromWorld()
@@ -391,7 +391,7 @@ BWOPopControl.InhabitantsSpawn = function(cnt)
                             event.y = spawnSquare:getY()
                             event.z = spawnSquare:getZ()
                             local dist = BanditUtils.DistTo(px, py, event.x, event.y)
-                            if dist > 15 and dist < 50 then
+                            if dist > 10 and dist < 30 then
                                 event.bandits = {}
                                 local bandit = BanditCreator.MakeFromRoom(spawnRoom)
                                 if bandit then
@@ -422,7 +422,7 @@ BWOPopControl.InhabitantsDespawn = function(cnt,always)
         local zy = zombie.y
         local dist = minDistanceToAnyPlayer(zx, zy)
         local i = 0
-        if dist > 50 then
+        if dist > 35 then
             local zombieObj = BanditZombie.GetInstanceById(zombie.id)
             zombieObj:removeFromSquare()
             zombieObj:removeFromWorld()
@@ -457,7 +457,7 @@ BWOPopControl.SurvivorsSpawn = function(missing)
     for i=1, missing do
         local anchor = pickRandomPlayer()
         if not anchor then break end
-        local spawnPoint = BanditScheduler.GenerateSpawnPoint(anchor, ZombRand(15,35))
+        local spawnPoint = BanditScheduler.GenerateSpawnPoint(anchor, ZombRand(10,25))
         if spawnPoint then
             event.x = spawnPoint.x
             event.y = spawnPoint.y
@@ -484,7 +484,7 @@ BWOPopControl.SurvivorsDespawn = function(cnt,always)
         local zy = zombie.y
         local dist = minDistanceToAnyPlayer(zx, zy)
         local i = 0
-        if dist > 50 then
+        if dist > 35 then
             local zombieObj = BanditZombie.GetInstanceById(zombie.id)
             zombieObj:removeFromSquare()
             zombieObj:removeFromWorld()
