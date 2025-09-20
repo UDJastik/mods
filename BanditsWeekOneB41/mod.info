@@ -1,0 +1,7 @@
+name=Bandits Week One B41
+poster=poster.png
+id=BanditsWeekOneB41
+description=Immerses you in the first week before the apocalypse
+require=Bandits
+pack=effects
+

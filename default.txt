@@ -1,0 +1,12 @@
+VERSION = 1,
+
+mods
+{
+	mod = Bandits,
+	mod = modoptions,
+	mod = BanditsWeekOneB41,
+}
+
+maps
+{
+}
