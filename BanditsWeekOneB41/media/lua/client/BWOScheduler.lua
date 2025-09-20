@@ -314,6 +314,36 @@ BWOScheduler.Schedule = generateSchedule()
 
 function BWOScheduler.MasterControl()
 
+    -- In multiplayer, only a single designated client ("master") should drive the schedule
+    local function isMasterClient()
+        if not isClient() then
+            return true
+        end
+        local players = getOnlinePlayers()
+        if not players or players:size() == 0 then
+            return false
+        end
+        local minId
+        for i = 0, players:size() - 1 do
+            local p = players:get(i)
+            local pid = tostring(BanditUtils.GetCharacterID(p))
+            if not minId or pid < minId then
+                minId = pid
+            end
+        end
+        local me = getSpecificPlayer(0)
+        if not me then
+            return false
+        end
+        return tostring(BanditUtils.GetCharacterID(me)) == tostring(minId)
+    end
+
+    if isClient() and getWorld() and getWorld():getGameMode() == "Multiplayer" then
+        if not isMasterClient() then
+            return
+        end
+    end
+
     local function daysInMonth(month)
         local daysPerMonth = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
         return daysPerMonth[month]

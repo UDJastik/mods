@@ -44,7 +44,7 @@ ZSClient.Commands.UpdateBanditPart = function(args)
         else
             local gmd = GetBanditModData()
             if gmd.Queue[id] then
-                table.remove(gmd.Queue, id)
+                gmd.Queue[id] = nil
             end
         end
     end

@@ -44,7 +44,7 @@ local _pruneQueueIfNeeded = function(gmd)
     for i = 1, toRemove do
         local rid = entries[i] and entries[i].id
         if rid then
-            table.remove(gmd.Queue, rid)
+            gmd.Queue[rid] = nil
             table.insert(removedIds, rid)
         end
     end
@@ -91,7 +91,7 @@ BanditServer.Commands.BanditRemove  = function(player, args)
     local gmd = GetBanditModData()
     local id = args.id
     if gmd.Queue[id] then
-        table.remove(gmd.Queue, id)
+        gmd.Queue[id] = nil
         -- print ("[INFO] Bandit removed: " .. id)
     end
 end

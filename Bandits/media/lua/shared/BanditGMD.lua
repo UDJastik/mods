@@ -21,7 +21,7 @@ local _pruneQueueIfNeeded = function(gmd)
     for i = 1, toRemove do
         local rid = entries[i] and entries[i].id
         if rid then
-            table.remove(gmd.Queue, rid)
+            gmd.Queue[id]=nil
         end
             table.insert(removed, rid)
     end

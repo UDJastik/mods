@@ -72,7 +72,7 @@ local survivorPrograms = {
 BWOPopControl.Zombie = function()
     if BWOPopControl.ZombieMax >= 400 then return end
 
-    local player = getSpecificPlayer(0)
+    local player = getPlayer()
     local zombieList = BanditZombie.GetAllZ()
     local cnt = 0
     BWOPopControl.ZombieCnt = 0
@@ -98,15 +98,15 @@ end
 
 -- npc on streets spawner
 BWOPopControl.StreetsSpawn = function(cnt)
-    local player = getSpecificPlayer(0)
+    local player = getPlayer()
     local cell = player:getCell()
     local cm = getWorld():getClimateManager()
     local rainIntensity = cm:getRainIntensity()
     local px, py = player:getX(), player:getY()
 
     for i = 1, cnt do
-        local x = 35 + ZombRand(25)
-        local y = 35 + ZombRand(25)
+        local x = 10 + ZombRand(25)
+        local y = 10 + ZombRand(25)
         
         if ZombRand(2) == 1 then x = -x end
         if ZombRand(2) == 1 then y = -y end
@@ -193,7 +193,7 @@ end
 
 -- npc on streets despawner
 BWOPopControl.StreetsDespawn = function(cnt,always)
-    local player = getSpecificPlayer(0)
+    local player = getPlayer()
     local cell = player:getCell()
     local px = player:getX()
     local py = player:getY()
@@ -232,7 +232,7 @@ BWOPopControl.InhabitantsSpawn = function(cnt)
     event.program.stage = "Prepare"
     
 
-    local player = getSpecificPlayer(0)
+    local player = getPlayer()
     local cell = player:getCell()
     local px, py = player:getX(), player:getY()
     local rooms = cell:getRoomList()
@@ -288,7 +288,7 @@ BWOPopControl.InhabitantsSpawn = function(cnt)
                             event.y = spawnSquare:getY()
                             event.z = spawnSquare:getZ()
                             local dist = BanditUtils.DistTo(px, py, event.x, event.y)
-                            if dist > 30 and dist < 80 then
+                            if dist > 15 and dist < 50 then
                                 event.bandits = {}
                                 local bandit = BanditCreator.MakeFromRoom(spawnRoom)
                                 if bandit then
@@ -309,7 +309,7 @@ end
 
 -- npcs in buildings despawner
 BWOPopControl.InhabitantsDespawn = function(cnt,always)
-    local player = getSpecificPlayer(0)
+    local player = getPlayer()
     local cell = player:getCell()
     local px = player:getX()
     local py = player:getY()
@@ -337,7 +337,7 @@ end
 -- survivors spawner
 BWOPopControl.SurvivorsSpawn = function(missing)
 
-    local player = getSpecificPlayer(0)
+    local player = getPlayer()
 
     config = {}
     config.clanId = 0
@@ -354,7 +354,7 @@ BWOPopControl.SurvivorsSpawn = function(missing)
     event.program.stage = "Prepare"
 
     for i=1, missing do
-        local spawnPoint = BanditScheduler.GenerateSpawnPoint(player, ZombRand(35,50))
+        local spawnPoint = BanditScheduler.GenerateSpawnPoint(player, ZombRand(15,35))
         if spawnPoint then
             event.x = spawnPoint.x
             event.y = spawnPoint.y
@@ -371,7 +371,7 @@ end
 
 -- survivors despawner
 BWOPopControl.SurvivorsDespawn = function(cnt,always)
-    local player = getSpecificPlayer(0)
+    local player = getPlayer()
     local cell = player:getCell()
     local px = player:getX()
     local py = player:getY()
@@ -411,7 +411,7 @@ BWOPopControl.UpdateCivs = function()
         return hmap[hour]
     end
 
-    local player = getSpecificPlayer(0)
+    local player = getPlayer()
     local px = player:getX()
     local py = player:getY()
 
