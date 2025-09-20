@@ -80,14 +80,68 @@ local function getOnlinePlayerCount()
 	return getPlayer() and 1 or 0
 end
 
--- regression-like scaling: 1->1.0, 2->2.0, 3->1.85, 4->1.7 ... clamped >= 1.0
+-- gather online players as a Lua array
+local function getOnlinePlayersArray()
+	local arr = {}
+	local list = getOnlinePlayers and getOnlinePlayers() or nil
+	if list and list:size() > 0 then
+		for i = 0, list:size() - 1 do
+			local p = list:get(i)
+			if p then table.insert(arr, p) end
+		end
+	else
+		local p = getPlayer()
+		if p then table.insert(arr, p) end
+	end
+	return arr
+end
+
+-- per-cluster regression-like scaling: players near each other share a common max.
+-- This function returns the LOCAL CLIENT'S SHARE of that cluster max so that,
+-- when each client runs spawns independently, their combined effect equals the cluster max.
 local function getPopulationScale()
-	local n = getOnlinePlayerCount()
-	if n <= 1 then return 1.0 end
-	if n == 2 then return 2.0 end
-	local scale = 2.0 - 0.15 * (n - 2)
-	if scale < 1.0 then scale = 1.0 end
-	return scale
+	local players = getOnlinePlayersArray()
+	if #players == 0 then return 0.0 end
+	if #players == 1 then return 1.0 end
+
+	local nearDist = 120 -- tiles; treat players within this as one cluster
+	local clusters = {}
+	for _, p in ipairs(players) do
+		local assigned = false
+		for _, cluster in ipairs(clusters) do
+			for _, m in ipairs(cluster) do
+				if BanditUtils.DistTo(p:getX(), p:getY(), m:getX(), m:getY()) <= nearDist then
+					table.insert(cluster, p)
+					assigned = true
+					break
+				end
+			end
+			if assigned then break end
+		end
+		if not assigned then
+			table.insert(clusters, { p })
+		end
+	end
+
+	local function clusterScale(size)
+		if size <= 1 then return 1.0 end
+		if size == 2 then return 2.0 end
+		local s = 2.0 - 0.15 * (size - 2)
+		if s < 1.0 then s = 1.0 end
+		return s
+	end
+
+	local me = getPlayer()
+	if not me then return 1.0 end
+	for _, cluster in ipairs(clusters) do
+		for _, m in ipairs(cluster) do
+			if m == me then
+				local s = clusterScale(#cluster)
+				return s / #cluster
+			end
+		end
+	end
+	return 1.0
 end
 
 local function countQueueByPrograms(programSet)
