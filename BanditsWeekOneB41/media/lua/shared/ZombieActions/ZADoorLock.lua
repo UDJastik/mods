@@ -30,7 +30,7 @@ ZombieActions.DoorLock.onComplete = function(zombie, task)
                         z = object:getSquare():getZ(),
                         index = object:getObjectIndex()
                     }
-                    sendClientCommand(getSpecificPlayer(0), 'Commands', 'CloseDoor', args)
+                    sendClientCommand(getPlayer(), 'Commands', 'CloseDoor', args)
                 else
                     if task.unlock then
                         object:setLockedByKey(false)
@@ -42,7 +42,7 @@ ZombieActions.DoorLock.onComplete = function(zombie, task)
                             z = object:getSquare():getZ(),
                             index = object:getObjectIndex()
                         }
-                        sendClientCommand(getSpecificPlayer(0), 'Commands', 'UnlockDoor', args)
+                        sendClientCommand(getPlayer(), 'Commands', 'UnlockDoor', args)
                     else
                         object:setLockedByKey(true)
                         zombie:playSound("LockDoor")
@@ -53,7 +53,7 @@ ZombieActions.DoorLock.onComplete = function(zombie, task)
                             z = object:getSquare():getZ(),
                             index = object:getObjectIndex()
                         }
-                        sendClientCommand(getSpecificPlayer(0), 'Commands', 'LockDoor', args)
+                        sendClientCommand(getPlayer(), 'Commands', 'LockDoor', args)
                     end
                 end
             end

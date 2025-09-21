@@ -1064,7 +1064,7 @@ BWOChat.Say = function(chatMessage)
         return txt
     end
 
-    local player = getSpecificPlayer(0)
+    local player = getPlayer()
     local color = player:getSpeakColour()
     player:addLineChatElement(chatMessage, color:getR(), color:getG(), color:getB())
 
@@ -1080,7 +1080,7 @@ BWOChat.Say = function(chatMessage)
         end
         
         if allMatch then
-            local player = getSpecificPlayer(0)
+            local player = getPlayer()
             local target = BanditUtils.GetClosestBanditLocationProgram(player, {"Walker", "Runner", "Inhabitant", "Active", "Babe"})
             if target.dist < 8 then
                 local bandit = BanditZombie.GetInstanceById(target.id)
@@ -1168,7 +1168,7 @@ end
 local function onKeyPressed(keynum)
     if keynum == Keyboard.KEY_T then
         print ("T pressed")
-        local ui = BWOChatPanel:new(0, 0, 300, 200, getSpecificPlayer(0))
+        local ui = BWOChatPanel:new(0, 0, 300, 200, getPlayer())
         ui:initialise()
         ui:addToUIManager()
     end

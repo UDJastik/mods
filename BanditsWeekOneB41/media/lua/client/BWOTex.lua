@@ -11,7 +11,7 @@ BWOTex.Blast = function()
     if not isIngameState() then return end
     if BWOTex.alpha == 0 then return end
 
-    local player = getSpecificPlayer(0)
+    local player = getPlayer()
     if player == nil then return end
 
     -- if not player:isOutside() then return end

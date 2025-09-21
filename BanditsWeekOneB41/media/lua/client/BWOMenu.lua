@@ -134,7 +134,7 @@ end
 
 BWOMenu.FlushDeadbodies = function(player)
     local args = {a=1}
-    sendClientCommand(getSpecificPlayer(0), 'Commands', 'DeadBodyFlush', args)
+    sendClientCommand(getPlayer(), 'Commands', 'DeadBodyFlush', args)
 end
 
 BWOMenu.TestEmitter = function(player, square)
@@ -447,40 +447,40 @@ BWOMenu.VehicleGoServer = function(player)
     local sq = BanditCompatibility.GetClickedSquare()
     if not sq then return end
     local args = { x = sq:getX(), y = sq:getY(), z = sq:getZ() or 0, speed = 25 }
-    sendClientCommand(getSpecificPlayer(0), 'Commands', 'VehicleGo', args)
+    sendClientCommand(getPlayer(), 'Commands', 'VehicleGo', args)
 end
 
 BWOMenu.VehicleEngineServer = function(player, on)
     local sq = BanditCompatibility.GetClickedSquare()
     if not sq then return end
     local args = { x = sq:getX(), y = sq:getY(), z = sq:getZ() or 0, on = on and true or false }
-    sendClientCommand(getSpecificPlayer(0), 'Commands', 'VehicleEngine', args)
+    sendClientCommand(getPlayer(), 'Commands', 'VehicleEngine', args)
 end
 
 BWOMenu.VehicleRegulatorServer = function(player, on)
     local sq = BanditCompatibility.GetClickedSquare()
     if not sq then return end
     local args = { x = sq:getX(), y = sq:getY(), z = sq:getZ() or 0, on = on and true or false }
-    sendClientCommand(getSpecificPlayer(0), 'Commands', 'VehicleRegulator', args)
+    sendClientCommand(getPlayer(), 'Commands', 'VehicleRegulator', args)
 end
 
 BWOMenu.VehicleRegulatorSpeedServer = function(player, speed)
     local sq = BanditCompatibility.GetClickedSquare()
     if not sq then return end
     local args = { x = sq:getX(), y = sq:getY(), z = sq:getZ() or 0, speed = tonumber(speed) or 25 }
-    sendClientCommand(getSpecificPlayer(0), 'Commands', 'VehicleRegulatorSpeed', args)
+    sendClientCommand(getPlayer(), 'Commands', 'VehicleRegulatorSpeed', args)
 end
 
 BWOMenu.VehicleHeadlightsServer = function(player, on)
     local sq = BanditCompatibility.GetClickedSquare()
     if not sq then return end
     local args = { x = sq:getX(), y = sq:getY(), z = sq:getZ() or 0, on = on and true or false }
-    sendClientCommand(getSpecificPlayer(0), 'Commands', 'VehicleHeadlights', args)
+    sendClientCommand(getPlayer(), 'Commands', 'VehicleHeadlights', args)
 end
 
 function BWOMenu.WorldContextMenuPre(playerID, context, worldobjects, test)
 
-    local player = getSpecificPlayer(playerID)
+    local player = getPlayer()
     local profession = player:getDescriptor():getProfession()
     -- print ("DIR: " .. player:getDirectionAngle())
 

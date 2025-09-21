@@ -55,7 +55,7 @@ ZombiePrograms.Babe.Follow = function(bandit)
     local cm = world:getClimateManager()
     local cell = getCell()
 
-    local master = getSpecificPlayer(0)
+    local master = getPlayer()
     
     -- update walktype
     local walkType = "Walk"

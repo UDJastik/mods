@@ -284,7 +284,7 @@ BWOServer.Commands.SpawnVehicle = function(player, args)
 end
 
 BWOServer.Commands.Nuke = function(player, args)
-    local player = getSpecificPlayer(0)
+    local player = getPlayer()
     local cell = player:getCell()
     local px = args.x
     local py = args.y

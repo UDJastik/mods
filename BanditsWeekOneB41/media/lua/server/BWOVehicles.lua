@@ -194,7 +194,7 @@ local function getAnyOnlinePlayer()
     if players and players:size() > 0 then
         return players:get(0)
     end
-    return getSpecificPlayer(0)
+    return getPlayer()
 end
 
 BWOVehicles.FindSpawnPoint = function(player)

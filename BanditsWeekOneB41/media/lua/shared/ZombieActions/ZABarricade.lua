@@ -42,7 +42,7 @@ ZombieActions.Barricade.onStart = function(zombie, task)
                         z = object:getSquare():getZ(),
                         index = object:getObjectIndex()
                     }
-                    sendClientCommand(getSpecificPlayer(0), 'Commands', 'CloseDoor', args)
+                    sendClientCommand(getPlayer(), 'Commands', 'CloseDoor', args)
                 end
 
                 break
@@ -103,7 +103,7 @@ ZombieActions.Barricade.onComplete = function(zombie, task)
                         z = object:getSquare():getZ(),
                         index = object:getObjectIndex()
                     }
-                    sendClientCommand(getSpecificPlayer(0), 'Commands', 'ToggleDoor', args)
+                    sendClientCommand(getPlayer(), 'Commands', 'ToggleDoor', args)
 
                 elseif instanceof(object, "IsoDoor") or instanceof(object, "IsoWindow") then
                     if BanditUtils.IsController(zombie) then
@@ -122,9 +122,9 @@ ZombieActions.Barricade.onComplete = function(zombie, task)
                             local args = {x=task.x, y=task.y, z=task.z, index=task.idx, condition=100}
 
                             if isClient() then
-                                sendClientCommand(getSpecificPlayer(0), 'Commands', 'Barricade', args)
+                                sendClientCommand(getPlayer(), 'Commands', 'Barricade', args)
                             else
-                                BanditServer.Commands.Barricade(getSpecificPlayer(0), args)
+                                BanditServer.Commands.Barricade(getPlayer(), args)
                             end
                         end
                     end

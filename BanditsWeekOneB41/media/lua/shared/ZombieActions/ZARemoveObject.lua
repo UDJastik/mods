@@ -55,7 +55,7 @@ ZombieActions.RemoveObject.onComplete = function(zombie, task)
 
     if task.otype then
         local args = {x=task.x, y=task.y, z=task.z, otype=task.otype}
-        BWOServer.Commands.ObjectRemove(getSpecificPlayer(0), args)
+        BWOServer.Commands.ObjectRemove(getPlayer(), args)
     end
 
     return true

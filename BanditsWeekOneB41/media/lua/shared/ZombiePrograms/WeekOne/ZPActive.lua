@@ -47,7 +47,7 @@ ZombiePrograms.Active.Prepare = function(bandit)
         table.insert(tasks, task1)
     end
 
-    local player = getSpecificPlayer(0)
+    local player = getPlayer()
     local px, py = player:getX(), player:getY()
     local anim = BanditUtils.Choice({"Spooked1", "Spooked2"})
     local task2 = {action="TimeFace", anim=anim, x=px, y=py, time=100}

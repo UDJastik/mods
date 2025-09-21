@@ -86,7 +86,7 @@ ZombieActions.Extinguish.onComplete = function(zombie, task)
         local args = {x=task.x, y=task.y, z=task.z, otype="fire"}
         -- bugged dunno why
         -- sendClientCommand(getSpecificPlayer(0), 'Commands', 'ObjectRemove', args)
-        BWOServer.Commands.ObjectRemove(getSpecificPlayer(0), args)
+        BWOServer.Commands.ObjectRemove(getPlayer(), args)
 
         if BWOScheduler.Anarchy.Transactions then
             BWOPlayer.Earn(zombie, 20)

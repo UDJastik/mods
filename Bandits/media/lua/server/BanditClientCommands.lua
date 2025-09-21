@@ -2,55 +2,6 @@ BanditServer = {}
 BanditServer.Commands = {}
 BanditServer.Players = {}
 
-local QUEUE_MAX = 400
-local _removeZombiesByIds = function(ids)
-    if not ids or #ids == 0 then return end
-    local cell = getCell()
-    if not cell then return end
-    local lookup = {}
-    for _, id in ipairs(ids) do
-        lookup[id] = true
-    end
-    local zombieList = cell:getZombieList()
-    -- iterate in reverse to avoid index issues if the list mutates
-    for i = zombieList:size() - 1, 0, -1 do
-        local zombie = zombieList:get(i)
-        if zombie and BanditUtils and BanditUtils.GetCharacterID then
-            local zid = BanditUtils.GetCharacterID(zombie)
-            if zid and lookup[zid] then
-                zombie:removeFromSquare()
-                zombie:removeFromWorld()
-            end
-        end
-    end
-end
-
-local _pruneQueueIfNeeded = function(gmd)
-    if not gmd or not gmd.Queue then return end
-    local count = 0
-    for _ in pairs(gmd.Queue) do
-        count = count + 1
-    end
-    if count <= QUEUE_MAX then return end
-    local entries = {}
-    for id, brain in pairs(gmd.Queue) do
-        local born = 0
-        if brain and brain.born then born = brain.born end
-        table.insert(entries, { id = id, born = born })
-    end
-    table.sort(entries, function(a, b) return a.born < b.born end)
-    local toRemove = count - QUEUE_MAX
-    local removedIds = {}
-    for i = 1, toRemove do
-        local rid = entries[i] and entries[i].id
-        if rid then
-            gmd.Queue[rid] = nil
-            table.insert(removedIds, rid)
-        end
-    end
-    _removeZombiesByIds(removedIds)
-end
-
 BanditServer.Players.PlayerUpdate = function(player, args)
     local gmd = GetBanditModDataPlayers()
     local id = args.id
@@ -230,8 +181,6 @@ BanditServer.Commands.SpawnGroup = function(player, event)
             gmd.Queue[id] = brain
         end
     end
-
-    _pruneQueueIfNeeded(gmd)
 end
 
 local _getBarricadeAble = function(x, y, z, index)

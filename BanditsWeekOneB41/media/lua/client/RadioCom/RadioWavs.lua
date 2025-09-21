@@ -64,7 +64,7 @@ function RadioWavs.PlaySound(_guid, device)
             local vehicle = vehiclePart:getVehicle()
             if vehicle then
                 sound:setEmitter( vehicle:getEmitter() ) -- use car's emitter, car radios don't have one
-                if vehicle == getSpecificPlayer(0):getVehicle() then -- player is in the car
+                if vehicle == getPlayer():getVehicle() then -- player is in the car
                     sound:set3D(false)
                     sound:setVolumeModifier(0.4)
                 else
@@ -154,7 +154,7 @@ function RadioWavs.OnDeviceText( _guid, _interactCodes, _x, _y, _z, _line, _devi
     -- Radio Device: Walkie Talkie
     if radio == nil then
         if (_x==-1 and _y==-1 and _z==-1) then
-            local player = getSpecificPlayer(0)
+            local player = getPlayer()
             if player and player:isDead() then player = nil end
             if player ~=nil then
                 local items = player:getInventory():getItems();
@@ -316,7 +316,7 @@ function RadioWavs.adjustSounds()
     if tickCounter2 < 1000 then 
         tickCounter2=tickCounter2+1
     else
-        p = getSpecificPlayer(0)
+        p = getPlayer()
         X = p:getX()
         Y = p:getY()
         
@@ -339,7 +339,7 @@ function RadioWavs.adjustSounds()
     tickCounter1 = 0
 
 
-    p = getSpecificPlayer(0)
+    p = getPlayer()
     X = p:getX()
     Y = p:getY()
     highestVolume = 0

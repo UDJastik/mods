@@ -1629,7 +1629,7 @@ BWORooms.IsIntrusion = function(room)
     -- available professions types: 
     -- unemployed, fireofficer, policeofficer, parkranger, constructionworker, securityguard, carpenter, burglar, chef, farmer, fisherman
     -- doctor, veteran, nurse, lumberjack, fitnessinstructor, burgerflipper, electrician, metalworker, mechanics
-    local player = getSpecificPlayer(0)
+    local player = getPlayer()
     local profession = player:getDescriptor():getProfession()
     local building = room:getBuilding()
 
@@ -1685,7 +1685,7 @@ BWORooms.TakeIntention = function(room, customName)
 
     local building = room:getBuilding()
     local def = room:getRoomDef()
-    local player = getSpecificPlayer(0)
+    local player = getPlayer()
     local profession = player:getDescriptor():getProfession()
 
     if def:getZ() < 0 then -- basements are separate buildings, it needs to be here to prevent player home basement to be treated as a a shop

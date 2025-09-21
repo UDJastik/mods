@@ -187,7 +187,7 @@ local checkHostility = function(bandit, attacker)
 
     if not attacker then return end
 
-    local player = getSpecificPlayer(0)
+    local player = getPlayer()
     
     -- attacking zombies is ok!
     local brain = BanditBrain.Get(bandit)
@@ -309,7 +309,7 @@ local onZombieDead = function(zombie)
 
     if not zombie:getVariableBoolean("Bandit") then return end
 
-    local player = getSpecificPlayer(0)
+    local player = getPlayer()
     local bandit = zombie
 
     Bandit.Say(bandit, "DEAD", true)
@@ -323,7 +323,7 @@ local onZombieDead = function(zombie)
 
     -- register dead body
     local args = {x=bandit:getX(), y=bandit:getY(), z=bandit:getZ()}
-    sendClientCommand(getSpecificPlayer(0), 'Commands', 'DeadBodyAdd', args)
+    sendClientCommand(player, 'Commands', 'DeadBodyAdd', args)
 
     local params ={}
     params.x = bandit:getX()
@@ -395,7 +395,7 @@ local onZombieDead = function(zombie)
 
     args = {}
     args.id = id
-    sendClientCommand(getSpecificPlayer(0), 'Commands', 'BanditRemove', args)
+    sendClientCommand(player, 'Commands', 'BanditRemove', args)
     BanditBrain.Remove(bandit)
 end
 
@@ -840,7 +840,7 @@ end
 
 -- sleep detector to init dreams
 local everyHours = function()
-	local player = getSpecificPlayer(0)
+	local player = getPlayer()
     if player:isAsleep() then
         BWOPlayer.wasSleeping = true
     end
@@ -851,7 +851,7 @@ local everyOneMinute = function()
     
     if not BWOScheduler.Anarchy.Transactions then return end
 
-    local player = getSpecificPlayer(0)
+    local player = getPlayer()
     if player:isAsleep() then return end 
 
     local gametime = getGameTime()
@@ -898,7 +898,7 @@ local function OnExitVehicle(character)
     local cx = character:getX()
     local cy = character:getY()
 
-    local player = getSpecificPlayer(0)
+    local player = getPlayer()
     local px = player:getX()
     local py = player:getY()
 

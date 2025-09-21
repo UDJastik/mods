@@ -236,7 +236,7 @@ BanditPrograms.Events = function(bandit)
                     return tasks
                 else
                     local args = {x=target.x, y=target.y, z=target.z, otype="preacher"}
-                    sendClientCommand(getSpecificPlayer(0), 'Commands', 'ObjectRemove', args)
+                    sendClientCommand(getPlayer(), 'Commands', 'ObjectRemove', args)
                 end
             end
         end
@@ -264,7 +264,7 @@ BanditPrograms.Events = function(bandit)
                     return tasks
                 else
                     local args = {x=target.x, y=target.y, z=target.z, otype="entertainer"}
-                    sendClientCommand(getSpecificPlayer(0), 'Commands', 'ObjectRemove', args)
+                    sendClientCommand(getPlayer(), 'Commands', 'ObjectRemove', args)
                 end
             end
         end
@@ -568,7 +568,7 @@ BanditPrograms.FollowRoad = function(bandit, walkType)
         end
     end
 
-    local playerVehicle = getSpecificPlayer(0):getVehicle()
+    local playerVehicle = getPlayer():getVehicle()
     if playerVehicle and not playerVehicle:isStopped() then
         vehicleList[playerVehicle:getId()] = playerVehicle
     end

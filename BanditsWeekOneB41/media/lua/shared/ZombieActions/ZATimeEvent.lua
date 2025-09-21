@@ -5,7 +5,7 @@ ZombieActions.TimeEvent.onStart = function(zombie, task)
     local gmd = GetBWOModData()
     if task.event then
         local args = {x=math.floor(task.x), y=math.floor(task.y), z=task.z, otype=task.event, ttl=BanditUtils.GetTime()+100000}
-        BWOServer.Commands.ObjectAdd(getSpecificPlayer(0), args)
+        BWOServer.Commands.ObjectAdd(getPlayer(), args)
     end
 
     if task.item then
@@ -55,7 +55,7 @@ end
 ZombieActions.TimeEvent.onComplete = function(zombie, task)
     if task.event then
         local args = {x=math.floor(task.x + 0.5), y=math.floor(task.y + 0.5), z=task.z, otype=task.event}
-        BWOServer.Commands.ObjectRemove(getSpecificPlayer(0), args)
+        BWOServer.Commands.ObjectRemove(getPlayer(), args)
     end
 
     if task.item then

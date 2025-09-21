@@ -319,7 +319,7 @@ function BWOScheduler.MasterControl()
         if not isClient() then
             return true
         end
-        local me = getSpecificPlayer(0)
+        local me = getPlayer()
         if not me then
             return false
         end
@@ -419,7 +419,7 @@ function BWOScheduler.MasterControl()
         ItemPickerJava.InitSandboxLootSettings()
     end
 
-    local player = getSpecificPlayer(0)
+    local player = getPlayer()
     local gametime = getGameTime()
 
     local startHour = gametime:getStartTimeOfDay()
@@ -657,7 +657,7 @@ end
 
 -- event processor
 function BWOScheduler.CheckEvents()
-    local player = getSpecificPlayer(0)
+    local player = getPlayer()
     local ct = BanditUtils.GetTime()
     for i, event in pairs(BWOScheduler.Events) do
         if event.start < ct then

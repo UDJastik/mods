@@ -52,7 +52,7 @@ BWOCompatibility.AddVehicle = function(btype, dir, square)
             wasRepaired = true,
             autonomous = true
         }
-        sendClientCommand(getSpecificPlayer(0), 'Commands', 'SpawnVehicle', args)
+        sendClientCommand(getPlayer(), 'Commands', 'SpawnVehicle', args)
         return nil
     end
     vehicle = addVehicleDebug(btype, dir, nil, square)

@@ -41,109 +41,6 @@ BWOPopControl.Fireman = {}
 BWOPopControl.Fireman.Cooldown = 0
 BWOPopControl.Fireman.On = true
 
--- helpers: multiplayer-aware player distance utilities
-local function forEachOnlinePlayer(callback)
-	local list = getOnlinePlayers and getOnlinePlayers() or nil
-	if list and list:size() > 0 then
-		for i = 0, list:size() - 1 do
-			local p = list:get(i)
-			if p then callback(p) end
-		end
-	else
-		local p = getPlayer()
-		if p then callback(p) end
-	end
-end
-
-local function minDistanceToAnyPlayer(x, y)
-	local minDist = math.huge
-	forEachOnlinePlayer(function(p)
-		local dist = BanditUtils.DistTo(x, y, p:getX(), p:getY())
-		if dist < minDist then minDist = dist end
-	end)
-	return minDist
-end
-
-local function pickRandomPlayer()
-	local list = getOnlinePlayers and getOnlinePlayers() or nil
-	if list and list:size() > 0 then
-		return list:get(ZombRand(list:size()))
-	end
-	return getPlayer()
-end
-
-local function getOnlinePlayerCount()
-	local list = getOnlinePlayers and getOnlinePlayers() or nil
-	if list and list:size() > 0 then
-		return list:size()
-	end
-	return getPlayer() and 1 or 0
-end
-
--- gather online players as a Lua array
-local function getOnlinePlayersArray()
-	local arr = {}
-	local list = getOnlinePlayers and getOnlinePlayers() or nil
-	if list and list:size() > 0 then
-		for i = 0, list:size() - 1 do
-			local p = list:get(i)
-			if p then table.insert(arr, p) end
-		end
-	else
-		local p = getPlayer()
-		if p then table.insert(arr, p) end
-	end
-	return arr
-end
-
--- per-cluster regression-like scaling: players near each other share a common max.
--- This function returns the LOCAL CLIENT'S SHARE of that cluster max so that,
--- when each client runs spawns independently, their combined effect equals the cluster max.
-local function getPopulationScale()
-	local players = getOnlinePlayersArray()
-	if #players == 0 then return 0.0 end
-	if #players == 1 then return 1.0 end
-
-	local nearDist = 120 -- tiles; treat players within this as one cluster
-	local clusters = {}
-	for _, p in ipairs(players) do
-		local assigned = false
-		for _, cluster in ipairs(clusters) do
-			for _, m in ipairs(cluster) do
-				if BanditUtils.DistTo(p:getX(), p:getY(), m:getX(), m:getY()) <= nearDist then
-					table.insert(cluster, p)
-					assigned = true
-					break
-				end
-			end
-			if assigned then break end
-		end
-		if not assigned then
-			table.insert(clusters, { p })
-		end
-	end
-
-	local function clusterScale(size)
-		if size <= 1 then return 1.0 end
-		if size == 2 then return 2.0 end
-		local s = 2.0 - 0.15 * (size - 2)
-		if s < 1.0 then s = 1.0 end
-		return s
-	end
-
-	local me = getPlayer()
-	if not me then return 1.0 end
-	for _, cluster in ipairs(clusters) do
-		for _, m in ipairs(cluster) do
-			if m == me then
-				local s = clusterScale(#cluster)
-				return s / #cluster
-			end
-		end
-	end
-	return 1.0
-end
-
 local function countQueueByPrograms(programSet)
 	local gmd = GetBanditModData()
 	local count = 0
@@ -174,7 +71,7 @@ local survivorPrograms = {
 -- zombie despawner
 BWOPopControl.Zombie = function()
     if BWOPopControl.ZombieMax >= 400 then return end
-
+    local gmd = GetBanditModData()
     local player = getPlayer()
     local zombieList = BanditZombie.GetAllZ()
     local cnt = 0
@@ -185,13 +82,14 @@ BWOPopControl.Zombie = function()
         if cnt > BWOPopControl.ZombieMax then
             local zombie = BanditZombie.GetInstanceById(z.id)
             -- local id = BanditUtils.GetCharacterID(zombie)
-            if zombie and zombie:isAlive() and not zombie:getVariableBoolean("Bandit") then
+            if zombie and zombie:isAlive() and not gmd.Queue[id] then
                 -- fixme: zombie:canBeDeletedUnnoticed(float)
                 args = {}
                 args.id = id
                 zombie:removeFromSquare()
                 zombie:removeFromWorld()
                 sendClientCommand(player, 'Commands', 'ZombieRemove', args)
+                sendClientCommand(player, 'Commands', 'BanditRemove', args)
             end
         else
             BWOPopControl.ZombieCnt = BWOPopControl.ZombieCnt + 1
@@ -201,15 +99,14 @@ end
 
 -- npc on streets spawner
 BWOPopControl.StreetsSpawn = function(cnt)
+    local player = getPlayer()
+    if not player then return end
+    local cell = player:getCell()
+    local px, py = player:getX(), player:getY()
     local cm = getWorld():getClimateManager()
     local rainIntensity = cm:getRainIntensity()
-    -- anchor chosen per-iteration for fairer MP distribution
 
     for i = 1, cnt do
-        local anchor = pickRandomPlayer()
-        if not anchor then break end
-        local cell = anchor:getCell()
-        local px, py = anchor:getX(), anchor:getY()
         local x = 10 + ZombRand(10)
         local y = 10 + ZombRand(10)
         
@@ -289,7 +186,7 @@ BWOPopControl.StreetsSpawn = function(cnt)
                     end
                     
                     table.insert(event.bandits, bandit)
-                    sendClientCommand(anchor, 'Commands', 'SpawnGroup', event)
+                    sendClientCommand(player, 'Commands', 'SpawnGroup', event)
                 end
             end
         end
@@ -299,17 +196,19 @@ end
 -- npc on streets despawner
 BWOPopControl.StreetsDespawn = function(cnt,always)
     local player = getPlayer()
+    if not player then return end
     local cell = player:getCell()
+    local px, py = player:getX(), player:getY()
 
-    local removePrg = {"Walker", "Runner", "Postal", "Entertainer", "Janitor", "Medic", "Gardener", "Vandal"}
+    local removePrg = {"Walker", "Runner", "Postal", "Entertainer", "Janitor", "Gardener", "Vandal"}
     local zombieList = BanditUtils.GetAllBanditByProgram(removePrg)
 
     for k, zombie in pairs(zombieList) do
         local zx = zombie.x
         local zy = zombie.y
-        local dist = minDistanceToAnyPlayer(zx, zy)
+        local dist = BanditUtils.DistTo(px, py, zx, zy)
         local i = 0
-        if dist > 35 then
+        if dist > 50 then
             local zombieObj = BanditZombie.GetInstanceById(zombie.id)
             zombieObj:removeFromSquare()
             zombieObj:removeFromWorld()
@@ -335,10 +234,11 @@ BWOPopControl.InhabitantsSpawn = function(cnt)
     event.program.stage = "Prepare"
     
 
-    local anchor = pickRandomPlayer()
-    local cell = anchor:getCell()
-    local px, py = anchor:getX(), anchor:getY()
-    local rooms = cell:getRoomList()
+    local player = getPlayer()
+    if not player then return end
+    local cell = player:getCell()
+    local px, py = player:getX(), player:getY()
+    local rooms = cell:getRoomList()    
 
     -- the probability of spawn in a room will depend on room size and other factors
     local cursor = 0
@@ -354,8 +254,8 @@ BWOPopControl.InhabitantsSpawn = function(cnt)
             
             if not BWOBuildings.IsEventBuilding(building, "home") and not BWOBuildings.IsRecentlyVisited(building) then
                 
-                if def:getZ() >=0 and math.abs(def:getX() - anchor:getX()) < 100 and math.abs(def:getX2() - anchor:getX()) < 100 and 
-                math.abs(def:getY() - anchor:getY()) < 100 and math.abs(def:getY2() - anchor:getY()) < 100 then
+                if def:getZ() >=0 and math.abs(def:getX() - player:getX()) < 100 and math.abs(def:getX2() - player:getX()) < 100 and 
+                math.abs(def:getY() - player:getY()) < 100 and math.abs(def:getY2() - player:getY()) < 100 then
 
                     local roomSize = BWORooms.GetRoomSize(room)
                     local popMod = 1 -- lags: BWORooms.GetRoomPopMod(room)
@@ -396,7 +296,7 @@ BWOPopControl.InhabitantsSpawn = function(cnt)
                                 local bandit = BanditCreator.MakeFromRoom(spawnRoom)
                                 if bandit then
                                     table.insert(event.bandits, bandit)
-                                    sendClientCommand(anchor, 'Commands', 'SpawnGroup', event)
+                                    sendClientCommand(player, 'Commands', 'SpawnGroup', event)
                                     break
                                 end
                             end
@@ -413,16 +313,17 @@ end
 -- npcs in buildings despawner
 BWOPopControl.InhabitantsDespawn = function(cnt,always)
     local player = getPlayer()
+    if not player then return end
     local cell = player:getCell()
 
-    local removePrg = {"Inhabitant", "Medic", "Janitor", "Entertainer"}
+    local removePrg = {"Inhabitant", "Janitor", "Entertainer"}
     local zombieList = BanditUtils.GetAllBanditByProgram(removePrg)
     for k, zombie in pairs(zombieList) do
         local zx = zombie.x
         local zy = zombie.y
-        local dist = minDistanceToAnyPlayer(zx, zy)
+        local dist = BanditUtils.DistTo(px, py, zx, zy)
         local i = 0
-        if dist > 35 then
+        if dist > 50 then
             local zombieObj = BanditZombie.GetInstanceById(zombie.id)
             zombieObj:removeFromSquare()
             zombieObj:removeFromWorld()
@@ -455,9 +356,9 @@ BWOPopControl.SurvivorsSpawn = function(missing)
     event.program.stage = "Prepare"
 
     for i=1, missing do
-        local anchor = pickRandomPlayer()
-        if not anchor then break end
-        local spawnPoint = BanditScheduler.GenerateSpawnPoint(anchor, ZombRand(10,25))
+        local player = getPlayer()
+        if not player then break end
+        local spawnPoint = BanditScheduler.GenerateSpawnPoint(player, ZombRand(10,25))
         if spawnPoint then
             event.x = spawnPoint.x
             event.y = spawnPoint.y
@@ -466,7 +367,7 @@ BWOPopControl.SurvivorsSpawn = function(missing)
             local bandit = BanditCreator.MakeFromWave(config)
             table.insert(event.bandits, bandit)
             
-            sendClientCommand(anchor, 'Commands', 'SpawnGroup', event)
+            sendClientCommand(player, 'Commands', 'SpawnGroup', event)
 
         end
     end
@@ -475,6 +376,7 @@ end
 -- survivors despawner
 BWOPopControl.SurvivorsDespawn = function(cnt,always)
     local player = getPlayer()
+    if not player then return end
     local cell = player:getCell()
 
     local removePrg = {"Survivor"}
@@ -482,9 +384,9 @@ BWOPopControl.SurvivorsDespawn = function(cnt,always)
     for k, zombie in pairs(zombieList) do
         local zx = zombie.x
         local zy = zombie.y
-        local dist = minDistanceToAnyPlayer(zx, zy)
+        local dist = BanditUtils.DistTo(px, py, zx, zy)
         local i = 0
-        if dist > 35 then
+        if dist > 50 then
             local zombieObj = BanditZombie.GetInstanceById(zombie.id)
             zombieObj:removeFromSquare()
             zombieObj:removeFromWorld()
@@ -513,6 +415,7 @@ BWOPopControl.UpdateCivs = function()
     end
 
     local player = getPlayer()
+    if not player then return end
     local px = player:getX()
     local py = player:getY()
 
@@ -633,17 +536,16 @@ BWOPopControl.UpdateCivs = function()
     BWOPopControl.StreetsCnt = countQueueByPrograms(streetPrograms)
     -- count desired population of civs
     local nominal = BWOPopControl.StreetsNominal
-    local mpScale = getPopulationScale()
     -- local density = BanditScheduler.GetDensityScore(player, 120) * 1.4
     local density = BWOBuildings.GetDensityScore(player, 120) / 8000
     if density > 2.5 then density = 2.5 end
     local hourmod = getHourScore()
-    local pop = nominal * density * hourmod * SandboxVars.BanditsWeekOne.StreetsPopMultiplier * mpScale
+    local pop = nominal * density * hourmod * SandboxVars.BanditsWeekOne.StreetsPopMultiplier
     BWOPopControl.StreetsMax = pop
 
     -- count missing amount to spawn
     local missing = BWOPopControl.StreetsMax - BWOPopControl.StreetsCnt
-    local capStreets = math.floor(20 * mpScale)
+    local capStreets = math.floor(20)
     if capStreets < 1 then capStreets = 1 end
     if missing > capStreets then missing = capStreets end
     if missing > 0 then
@@ -661,13 +563,12 @@ BWOPopControl.UpdateCivs = function()
 
     -- count desired population of civs
     local nominal = BWOPopControl.InhabitantsNominal
-    local mpScale = getPopulationScale()
     -- local density = BanditScheduler.GetDensityScore(player, 120) * 1.2
-    BWOPopControl.InhabitantsMax = nominal * SandboxVars.BanditsWeekOne.InhabitantsPopMultiplier * mpScale
+    BWOPopControl.InhabitantsMax = nominal * SandboxVars.BanditsWeekOne.InhabitantsPopMultiplier
 
     -- count missing amount to spawn
     local missing = BWOPopControl.InhabitantsMax - BWOPopControl.InhabitantsCnt
-    local capInhab = math.floor(20 * mpScale)
+    local capInhab = math.floor(20)
     if capInhab < 1 then capInhab = 1 end
     if missing > capInhab then missing = capInhab end
     if missing > 0 then
@@ -684,12 +585,11 @@ BWOPopControl.UpdateCivs = function()
 
     -- count desired population of civs
     local nominal = BWOPopControl.SurvivorsNominal
-    local mpScale = getPopulationScale()
-    BWOPopControl.SurvivorsMax = math.max(1, math.floor(nominal * mpScale))
+    BWOPopControl.SurvivorsMax = math.max(1, math.floor(nominal))
 
     -- count missing amount to spawn
     local missing = BWOPopControl.SurvivorsMax - BWOPopControl.SurvivorsCnt
-    local capSurv = math.floor(4 * mpScale)
+    local capSurv = math.floor(4)
     if capSurv < 1 then capSurv = 1 end
     if missing > capSurv then missing = capSurv end
     if missing > 0 then

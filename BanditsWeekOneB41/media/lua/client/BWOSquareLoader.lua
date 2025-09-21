@@ -769,7 +769,7 @@ BWOSquareLoader.VehicleFixOrRemove = function()
 
     for _, vehicle in pairs(toDelete) do
         -- Request authoritative removal on server to avoid client-only flicker
-        local player = getSpecificPlayer(0)
+        local player = getPlayer()
         local args = { id = vehicle:getId() }
         local sq = vehicle:getSquare()
         if sq then args.x = sq:getX(); args.y = sq:getY(); args.z = sq:getZ() end

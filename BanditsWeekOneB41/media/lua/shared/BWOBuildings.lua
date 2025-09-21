@@ -59,7 +59,7 @@ BWOBuildings.IsResidential = function(building)
     end
     ]]
 
-    local player = getSpecificPlayer(0)
+    local player = getPlayer()
     local def = building:getDef()
     local roomDefs = def:getRooms() -- returns roomDefs!
     local hasBedroom = false
@@ -131,7 +131,7 @@ BWOBuildings.IsRecentlyVisited = function(building)
 end
 
 BWOBuildings.FindBuildingWithRoom = function(bsearch)
-    local player = getSpecificPlayer(0)
+    local player = getPlayer()
     local cell = player:getCell()
     local rooms = cell:getRoomList()
     local buildings = {}
