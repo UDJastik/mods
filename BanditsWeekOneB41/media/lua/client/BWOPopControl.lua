@@ -67,7 +67,56 @@ local inhabitantPrograms = {
 local survivorPrograms = {
     Survivor = true
 }
+function everyOneHour()
+    local player = getPlayer() 
+    if not player then return end
+    local cell = player:getCell()
+    local zombieList = cell:getZombieList()
+    local cnt = countQueueByPrograms(streetPrograms)
+    local cnt2 = countQueueByPrograms(inhabitantPrograms)
+    local cnt3 = countQueueByPrograms(survivorPrograms)
+    
+    -- validate mod data
+    local gmd = GetBanditModData()
+    if not gmd or not gmd.Queue then return end
 
+    -- build a combined program filter of interest
+    local allowedPrograms = {}
+    for k, v in pairs(streetPrograms) do if v then allowedPrograms[k] = true end end
+    for k, v in pairs(inhabitantPrograms) do if v then allowedPrograms[k] = true end end
+    for k, v in pairs(survivorPrograms) do if v then allowedPrograms[k] = true end end
+
+    -- collect real nearby bandits with allowed programs
+    local nearIds = {}
+    local nearCnt = 0
+    local banditList = BanditZombie.GetAllB and BanditZombie.GetAllB() or {}
+    for id, light in pairs(banditList) do
+        local brain = light and light.brain
+        local prg = brain and brain.program and brain.program.name
+        if prg and allowedPrograms[prg] then
+            nearIds[id] = true
+            nearCnt = nearCnt + 1
+        end
+    end
+
+    -- compare against queue and prepare removal for those not near the player
+    local queueCnt = 0
+    local removeIds = {}
+    for id, brain in pairs(gmd.Queue) do
+        local prg = brain and brain.program and brain.program.name
+        if prg and allowedPrograms[prg] then
+            queueCnt = queueCnt + 1
+            if not nearIds[id] then
+                table.insert(removeIds, id)
+            end
+        end
+    end
+
+    -- if the numbers differ, clean up queue entries that have no nearby instance
+    if queueCnt ~= nearCnt and #removeIds > 0 then
+        sendClientCommand(player, 'Commands', 'BanditRemoveBatch', { ids = removeIds })
+    end
+end
 -- zombie despawner
 BWOPopControl.Zombie = function()
     if BWOPopControl.ZombieMax >= 400 then return end
@@ -204,26 +253,30 @@ BWOPopControl.StreetsSpawn = function(cnt)
 end
 
 -- npc on streets despawner
-BWOPopControl.StreetsDespawn = function(cnt,always)
+	BWOPopControl.StreetsDespawn = function(cnt,always)
     local player = getPlayer()
     if not player then return end
     local cell = player:getCell()
-    local px, py = player:getX(), player:getY()
+		local vehicle = player:getVehicle()
+		local px, py = player:getX(), player:getY()
+		if vehicle then px, py = vehicle:getX(), vehicle:getY() end
 
     local removePrg = {"Walker", "Runner", "Postal", "Entertainer", "Janitor", "Gardener", "Vandal"}
     local zombieList = BanditUtils.GetAllBanditByProgram(removePrg)
 
-    local removeIds = {}
-    for k, zombie in pairs(zombieList) do
+		local removeIds = {}
+		local i = 0
+		for k, zombie in pairs(zombieList) do
         local zx = zombie.x
         local zy = zombie.y
         local dist = BanditUtils.DistTo(px, py, zx, zy)
-        local i = 0
-        if dist > 50 then
-            local zombieObj = BanditZombie.GetInstanceById(zombie.id)
-            zombieObj:removeFromSquare()
-            zombieObj:removeFromWorld()
-            table.insert(removeIds, zombie.id)
+			if dist > 50 then
+				local zombieObj = BanditZombie.GetInstanceById(zombie.id)
+				if zombieObj then
+					zombieObj:removeFromSquare()
+					zombieObj:removeFromWorld()
+					table.insert(removeIds, zombie.id)
+				end
             i = i + 1
             if i >= cnt and not always then break end
         end
@@ -334,24 +387,29 @@ BWOPopControl.InhabitantsSpawn = function(cnt)
 end
 
 -- npcs in buildings despawner
-BWOPopControl.InhabitantsDespawn = function(cnt,always)
+	BWOPopControl.InhabitantsDespawn = function(cnt,always)
     local player = getPlayer()
     if not player then return end
     local cell = player:getCell()
+		local vehicle = player:getVehicle()
+		local px, py = player:getX(), player:getY()
+		if vehicle then px, py = vehicle:getX(), vehicle:getY() end
 
     local removePrg = {"Inhabitant", "Janitor", "Entertainer"}
     local zombieList = BanditUtils.GetAllBanditByProgram(removePrg)
-    local removeIds = {}
-    for k, zombie in pairs(zombieList) do
+		local removeIds = {}
+		local i = 0
+		for k, zombie in pairs(zombieList) do
         local zx = zombie.x
         local zy = zombie.y
         local dist = BanditUtils.DistTo(px, py, zx, zy)
-        local i = 0
-        if dist > 50 then
-            local zombieObj = BanditZombie.GetInstanceById(zombie.id)
-            zombieObj:removeFromSquare()
-            zombieObj:removeFromWorld()
-            table.insert(removeIds, zombie.id)
+			if dist > 50 then
+				local zombieObj = BanditZombie.GetInstanceById(zombie.id)
+				if zombieObj then
+					zombieObj:removeFromSquare()
+					zombieObj:removeFromWorld()
+					table.insert(removeIds, zombie.id)
+				end
             i = i + 1
             if i >= cnt and not always then break end
         end
@@ -414,24 +472,29 @@ BWOPopControl.SurvivorsSpawn = function(missing)
 end
 
 -- survivors despawner
-BWOPopControl.SurvivorsDespawn = function(cnt,always)
+	BWOPopControl.SurvivorsDespawn = function(cnt,always)
     local player = getPlayer()
     if not player then return end
     local cell = player:getCell()
+		local vehicle = player:getVehicle()
+		local px, py = player:getX(), player:getY()
+		if vehicle then px, py = vehicle:getX(), vehicle:getY() end
 
     local removePrg = {"Survivor"}
     local zombieList = BanditUtils.GetAllBanditByProgram(removePrg)
-    local removeIds = {}
-    for k, zombie in pairs(zombieList) do
+		local removeIds = {}
+		local i = 0
+		for k, zombie in pairs(zombieList) do
         local zx = zombie.x
         local zy = zombie.y
         local dist = BanditUtils.DistTo(px, py, zx, zy)
-        local i = 0
-        if dist > 50 then
-            local zombieObj = BanditZombie.GetInstanceById(zombie.id)
-            zombieObj:removeFromSquare()
-            zombieObj:removeFromWorld()
-            table.insert(removeIds, zombie.id)
+			if dist > 50 then
+				local zombieObj = BanditZombie.GetInstanceById(zombie.id)
+				if zombieObj then
+					zombieObj:removeFromSquare()
+					zombieObj:removeFromWorld()
+					table.insert(removeIds, zombie.id)
+				end
             i = i + 1
             if i >= cnt and not always then break end
         end
@@ -660,7 +723,7 @@ end
 
 local onTick = function(numTicks)
     
-    if numTicks % 2 == 0 then
+    if numTicks % 4 == 0 then
         BWOPopControl.Zombie()
     end
 end
@@ -694,5 +757,6 @@ local OnBanditUpdate = function(bandit)
 end
 
 Events.EveryOneMinute.Add(everyOneMinute)
+Events.EveryOneHour.Add(everyOneHour)
 Events.OnTick.Add(onTick)
 Events.OnZombieUpdate.Add(OnBanditUpdate)
