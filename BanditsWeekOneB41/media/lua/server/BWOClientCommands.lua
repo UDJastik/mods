@@ -89,6 +89,39 @@ BWOServer.Commands.ZombieRemove = function(player, args)
     -- not found; silently ignore or log if needed
 end
 
+-- Remove many zombies by ids in a single request and notify clients per-id
+BWOServer.Commands.ZombieRemoveBatch = function(player, args)
+    if not args then return end
+    local ids = args.ids or args
+    if type(ids) ~= 'table' then return end
+
+    local cell = getCell()
+    if not cell then return end
+
+    local lookup = {}
+    for _, id in pairs(ids) do
+        if id then lookup[id] = true end
+    end
+
+    local removed = {}
+    local zombieList = cell:getZombieList()
+    for i = 0, zombieList:size() - 1 do
+        local zombie = zombieList:get(i)
+        if zombie and BanditUtils and BanditUtils.GetCharacterID then
+            local zid = BanditUtils.GetCharacterID(zombie)
+            if zid and lookup[zid] then
+                zombie:removeFromWorld()
+                zombie:removeFromSquare()
+                table.insert(removed, zid)
+            end
+        end
+    end
+
+    for _, rid in pairs(removed) do
+        sendServerCommand('Commands', 'ZombieRemoveClient', { id = rid })
+    end
+end
+
 -- Remove a vehicle on the server to keep clients in sync
 BWOServer.Commands.VehicleRemove = function(player, args)
     if not args then return end

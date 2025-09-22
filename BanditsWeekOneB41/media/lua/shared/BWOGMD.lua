@@ -8,6 +8,7 @@ function InitBWOModData(isNewGame)
         ModData.request("BanditWeekOne")
     end
     
+    if not globalData.ServerQueue then globalData.ServerQueue = {} end
     if not globalData.DeadBodies then globalData.DeadBodies = {} end
     if not globalData.Objects then globalData.Objects = {} end
     if not globalData.EventBuildings then globalData.EventBuildings = {} end

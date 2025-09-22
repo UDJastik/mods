@@ -47,6 +47,19 @@ BanditServer.Commands.BanditRemove  = function(player, args)
     end
 end
 
+-- Remove multiple bandits from server queue in a single request
+BanditServer.Commands.BanditRemoveBatch = function(player, args)
+    local gmd = GetBanditModData()
+    if not args then return end
+    local ids = args.ids or args
+    if type(ids) ~= 'table' then return end
+    for _, id in pairs(ids) do
+        if id and gmd.Queue[id] then
+            gmd.Queue[id] = nil
+        end
+    end
+end
+
 BanditServer.Commands.BanditFlush  = function(player, args)
     local gmd = GetBanditModData()
     gmd.Queue = {}
@@ -179,6 +192,30 @@ BanditServer.Commands.SpawnGroup = function(player, event)
 
             -- print ("[INFO] Bandit " .. brain.fullname .. "(".. id .. ") from clan " .. bandit.clan .. " in outfit " .. bandit.outfit .. " has joined the game.")
             gmd.Queue[id] = brain
+        end
+    end
+end
+
+-- Spawn multiple groups in a single command by delegating to SpawnGroup
+BanditServer.Commands.SpawnGroupBatch = function(player, args)
+    local events = args and (args.events or args) or nil
+    if not events or type(events) ~= 'table' then return end
+
+    -- Prefer array-like iteration; fallback to pairs for map-style tables
+    local function _handle(event)
+        if event and event.bandits and event.x and event.y and event.program then
+            BanditServer.Commands.SpawnGroup(player, event)
+        end
+    end
+
+    local handled = false
+    for i = 1, (events and #events or 0) do
+        _handle(events[i])
+        handled = true
+    end
+    if not handled then
+        for _, ev in pairs(events) do
+            _handle(ev)
         end
     end
 end

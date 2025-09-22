@@ -76,6 +76,7 @@ BWOPopControl.Zombie = function()
     local zombieList = BanditZombie.GetAllZ()
     local cnt = 0
     BWOPopControl.ZombieCnt = 0
+    local removeIds = {}
     for id, z in pairs(zombieList) do
         cnt = cnt + 1
         local test = BWOPopControl
@@ -88,12 +89,15 @@ BWOPopControl.Zombie = function()
                 args.id = z.id
                 zombie:removeFromSquare()
                 zombie:removeFromWorld()
-                sendClientCommand(player, 'Commands', 'ZombieRemove', args)
-                sendClientCommand(player, 'Commands', 'BanditRemove', args)
+                table.insert(removeIds, z.id)
             end
         else
             BWOPopControl.ZombieCnt = BWOPopControl.ZombieCnt + 1
         end
+    end
+    if player and #removeIds > 0 then
+        sendClientCommand(player, 'Commands', 'ZombieRemoveBatch', { ids = removeIds })
+        sendClientCommand(player, 'Commands', 'BanditRemoveBatch', { ids = removeIds })
     end
 end
 
@@ -105,6 +109,8 @@ BWOPopControl.StreetsSpawn = function(cnt)
     local px, py = player:getX(), player:getY()
     local cm = getWorld():getClimateManager()
     local rainIntensity = cm:getRainIntensity()
+
+    local events = {}
 
     for i = 1, cnt do
         local x = 10 + ZombRand(10)
@@ -186,10 +192,14 @@ BWOPopControl.StreetsSpawn = function(cnt)
                     end
                     
                     table.insert(event.bandits, bandit)
-                    sendClientCommand(player, 'Commands', 'SpawnGroup', event)
+                    table.insert(events, event)
                 end
             end
         end
+    end
+
+    if #events > 0 then
+        sendClientCommand(player, 'Commands', 'SpawnGroupBatch', { events = events })
     end
 end
 
@@ -203,6 +213,7 @@ BWOPopControl.StreetsDespawn = function(cnt,always)
     local removePrg = {"Walker", "Runner", "Postal", "Entertainer", "Janitor", "Gardener", "Vandal"}
     local zombieList = BanditUtils.GetAllBanditByProgram(removePrg)
 
+    local removeIds = {}
     for k, zombie in pairs(zombieList) do
         local zx = zombie.x
         local zy = zombie.y
@@ -212,12 +223,13 @@ BWOPopControl.StreetsDespawn = function(cnt,always)
             local zombieObj = BanditZombie.GetInstanceById(zombie.id)
             zombieObj:removeFromSquare()
             zombieObj:removeFromWorld()
-            args = {}
-            args.id = zombie.id
-            sendClientCommand(player, 'Commands', 'BanditRemove', args)
+            table.insert(removeIds, zombie.id)
             i = i + 1
             if i >= cnt and not always then break end
         end
+    end
+    if #removeIds > 0 then
+        sendClientCommand(player, 'Commands', 'BanditRemoveBatch', { ids = removeIds })
     end
 end
 
@@ -232,6 +244,8 @@ BWOPopControl.InhabitantsSpawn = function(cnt)
     event.program = {}
     event.program.name = "Inhabitant"
     event.program.stage = "Prepare"
+
+    local events = {}
     
 
     local player = getPlayer()
@@ -296,7 +310,16 @@ BWOPopControl.InhabitantsSpawn = function(cnt)
                                 local bandit = BanditCreator.MakeFromRoom(spawnRoom)
                                 if bandit then
                                     table.insert(event.bandits, bandit)
-                                    sendClientCommand(player, 'Commands', 'SpawnGroup', event)
+                                    local ev = {
+                                        x = event.x,
+                                        y = event.y,
+                                        z = event.z,
+                                        hostile = event.hostile,
+                                        occured = event.occured,
+                                        program = { name = event.program.name, stage = event.program.stage },
+                                        bandits = event.bandits
+                                    }
+                                    table.insert(events, ev)
                                     break
                                 end
                             end
@@ -318,6 +341,7 @@ BWOPopControl.InhabitantsDespawn = function(cnt,always)
 
     local removePrg = {"Inhabitant", "Janitor", "Entertainer"}
     local zombieList = BanditUtils.GetAllBanditByProgram(removePrg)
+    local removeIds = {}
     for k, zombie in pairs(zombieList) do
         local zx = zombie.x
         local zy = zombie.y
@@ -327,12 +351,13 @@ BWOPopControl.InhabitantsDespawn = function(cnt,always)
             local zombieObj = BanditZombie.GetInstanceById(zombie.id)
             zombieObj:removeFromSquare()
             zombieObj:removeFromWorld()
-            args = {}
-            args.id = zombie.id
-            sendClientCommand(player, 'Commands', 'BanditRemove', args)
+            table.insert(removeIds, zombie.id)
             i = i + 1
             if i >= cnt and not always then break end
         end
+    end
+    if #removeIds > 0 then
+        sendClientCommand(player, 'Commands', 'BanditRemoveBatch', { ids = removeIds })
     end
 end
 
@@ -355,6 +380,8 @@ BWOPopControl.SurvivorsSpawn = function(missing)
     event.program.name = "Survivor"
     event.program.stage = "Prepare"
 
+    local events = {}
+
     for i=1, missing do
         local player = getPlayer()
         if not player then break end
@@ -363,13 +390,26 @@ BWOPopControl.SurvivorsSpawn = function(missing)
             event.x = spawnPoint.x
             event.y = spawnPoint.y
             event.bandits = {}
-            
+
             local bandit = BanditCreator.MakeFromWave(config)
             table.insert(event.bandits, bandit)
-            
-            sendClientCommand(player, 'Commands', 'SpawnGroup', event)
+
+            local ev = {
+                x = event.x,
+                y = event.y,
+                hostile = event.hostile,
+                occured = event.occured,
+                program = { name = event.program.name, stage = event.program.stage },
+                bandits = event.bandits
+            }
+            table.insert(events, ev)
 
         end
+    end
+
+    local playerForSend = getPlayer()
+    if playerForSend and #events > 0 then
+        sendClientCommand(playerForSend, 'Commands', 'SpawnGroupBatch', { events = events })
     end
 end
 
@@ -381,6 +421,7 @@ BWOPopControl.SurvivorsDespawn = function(cnt,always)
 
     local removePrg = {"Survivor"}
     local zombieList = BanditUtils.GetAllBanditByProgram(removePrg)
+    local removeIds = {}
     for k, zombie in pairs(zombieList) do
         local zx = zombie.x
         local zy = zombie.y
@@ -390,12 +431,13 @@ BWOPopControl.SurvivorsDespawn = function(cnt,always)
             local zombieObj = BanditZombie.GetInstanceById(zombie.id)
             zombieObj:removeFromSquare()
             zombieObj:removeFromWorld()
-            args = {}
-            args.id = zombie.id
-            sendClientCommand(player, 'Commands', 'BanditRemove', args)
+            table.insert(removeIds, zombie.id)
             i = i + 1
             if i >= cnt and not always then break end
         end
+    end
+    if #removeIds > 0 then
+        sendClientCommand(player, 'Commands', 'BanditRemoveBatch', { ids = removeIds })
     end
 end
 
