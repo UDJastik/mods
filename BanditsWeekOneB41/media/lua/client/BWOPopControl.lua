@@ -82,10 +82,10 @@ BWOPopControl.Zombie = function()
         if cnt > BWOPopControl.ZombieMax then
             local zombie = BanditZombie.GetInstanceById(z.id)
             -- local id = BanditUtils.GetCharacterID(zombie)
-            if zombie and zombie:isAlive() and not gmd.Queue[id] then
+            if zombie and zombie:isAlive() and not gmd.Queue[z.id] then
                 -- fixme: zombie:canBeDeletedUnnoticed(float)
                 args = {}
-                args.id = id
+                args.id = z.id
                 zombie:removeFromSquare()
                 zombie:removeFromWorld()
                 sendClientCommand(player, 'Commands', 'ZombieRemove', args)
