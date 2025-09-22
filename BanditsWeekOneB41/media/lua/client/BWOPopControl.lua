@@ -67,56 +67,6 @@ local inhabitantPrograms = {
 local survivorPrograms = {
     Survivor = true
 }
-function everyOneHour()
-    local player = getPlayer() 
-    if not player then return end
-    local cell = player:getCell()
-    local zombieList = cell:getZombieList()
-    local cnt = countQueueByPrograms(streetPrograms)
-    local cnt2 = countQueueByPrograms(inhabitantPrograms)
-    local cnt3 = countQueueByPrograms(survivorPrograms)
-    
-    -- validate mod data
-    local gmd = GetBanditModData()
-    if not gmd or not gmd.Queue then return end
-
-    -- build a combined program filter of interest
-    local allowedPrograms = {}
-    for k, v in pairs(streetPrograms) do if v then allowedPrograms[k] = true end end
-    for k, v in pairs(inhabitantPrograms) do if v then allowedPrograms[k] = true end end
-    for k, v in pairs(survivorPrograms) do if v then allowedPrograms[k] = true end end
-
-    -- collect real nearby bandits with allowed programs
-    local nearIds = {}
-    local nearCnt = 0
-    local banditList = BanditZombie.GetAllB and BanditZombie.GetAllB() or {}
-    for id, light in pairs(banditList) do
-        local brain = light and light.brain
-        local prg = brain and brain.program and brain.program.name
-        if prg and allowedPrograms[prg] then
-            nearIds[id] = true
-            nearCnt = nearCnt + 1
-        end
-    end
-
-    -- compare against queue and prepare removal for those not near the player
-    local queueCnt = 0
-    local removeIds = {}
-    for id, brain in pairs(gmd.Queue) do
-        local prg = brain and brain.program and brain.program.name
-        if prg and allowedPrograms[prg] then
-            queueCnt = queueCnt + 1
-            if not nearIds[id] then
-                table.insert(removeIds, id)
-            end
-        end
-    end
-
-    -- if the numbers differ, clean up queue entries that have no nearby instance
-    if queueCnt ~= nearCnt and #removeIds > 0 then
-        sendClientCommand(player, 'Commands', 'BanditRemoveBatch', { ids = removeIds })
-    end
-end
 -- zombie despawner
 BWOPopControl.Zombie = function()
     if BWOPopControl.ZombieMax >= 400 then return end
@@ -757,6 +707,5 @@ local OnBanditUpdate = function(bandit)
 end
 
 Events.EveryOneMinute.Add(everyOneMinute)
-Events.EveryOneHour.Add(everyOneHour)
 Events.OnTick.Add(onTick)
 Events.OnZombieUpdate.Add(OnBanditUpdate)
